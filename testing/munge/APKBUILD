@@ -1,0 +1,66 @@
+# Contributor: Darran Carey <darran.carey@pawsey.org.au>
+# Maintainer: Darran Carey <darran.carey@pawsey.org.au>
+pkgname=munge
+pkgver=0.5.14
+pkgrel=0
+pkgdesc="MUNGE Uid 'N' Gid Emporium"
+url="https://dun.github.io/$pkgname/"
+arch="all"
+license="GPL-3.0-or-later"
+depends="$pkgname-libs=$pkgver-$pkgrel"
+makedepends="autoconf automake bzip2-dev gcc libgcrypt-dev libtool zlib-dev"
+checkdepends="procps"
+pkgusers="$pkgname"
+pkggroups="$pkgname"
+install="$pkgname.post-install $pkgname.pre-install"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-libs $pkgname-openrc"
+source="https://github.com/dun/$pkgname/releases/download/$pkgname-$pkgver/$pkgname-$pkgver.tar.xz
+	https://github.com/dun/$pkgname/releases/download/$pkgname-$pkgver/$pkgname-$pkgver.tar.xz.asc
+	https://github.com/dun.gpg
+	$pkgname.confd
+	$pkgname.initd
+        "
+
+build() {
+        ./bootstrap
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--localstatedir=/var \
+		--runstatedir=/run \
+		--with-crypto-lib=libgcrypt \
+		--with-sysvinitddir=/etc/init.d \
+		--disable-static
+	make
+}
+
+check() {
+	make check
+}
+
+libs() {
+	license="LGPL-3.0-or-later"
+	pkgdesc="A shared library for applications using MUNGE"
+
+	mkdir -p "$subpkgdir"/usr/lib
+	mv "$pkgdir"/usr/lib/*.so.* "$subpkgdir"/usr/lib/
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+
+	install -m0755 "$srcdir/$pkgname.initd" "$pkgdir/etc/init.d/$pkgname"
+	install -Dm0644 "$srcdir/$pkgname.confd" "$pkgdir/etc/conf.d/$pkgname"
+
+	install -dm0700 -o "$pkgusers" -g "$pkggroups" "$pkgdir/etc/$pkgname"
+	install -dm0755 -o "$pkgusers" -g "$pkggroups" "$pkgdir/run/$pkgname"
+	install -dm0711 -o "$pkgusers" -g "$pkggroups" "$pkgdir/var/lib/$pkgname"
+	install -dm0700 -o "$pkgusers" -g "$pkggroups" "$pkgdir/var/log/$pkgname"
+}
+sha512sums="742c9f2c1cf9f5b070f91fc6b9e74c5f2712c385bce6820c400e884fb6d78f86dea7ebe8e3918d056bf72e746a6af5481a1a8d9f0834a28836da90a42b4eb166  munge-0.5.14.tar.xz
+e2b660963d444e93063783662d287aa4a25b8fbe460f666989073dc8b19292d2fe0a00cc83c93f60ae9a1eb63b5d82dc32c0a36805836a87fe9dda36b6546812  munge-0.5.14.tar.xz.asc
+45eb5f83a8a0308200d7e3002687743f39051d6e89a84e1c16e22496895fb0da5976e725e0b7e5094dfaa6accf3f554137aa7da422d40e922154096b3987c720  dun.gpg
+d9b268bf932d0a2a90e657d6f4777e976e67962af8c4c9aeb4120cbf509e6fad8fe55ee92f6a426ea33cdaf429884e55866c426b1f63f585cf4f7b08047b6430  munge.confd
+6a97e8a7652a9dea6a407f2c165ff0024660367e4a551e8477e6585142dbf26a9e8d9b0073af00b368ded0d80ed5bd3fe4b3c3bd3f637b36d5248bb990e6a6c2  munge.initd"

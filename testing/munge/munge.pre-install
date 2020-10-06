@@ -1,0 +1,13 @@
+#!/bin/sh
+
+getent group munge 2>&1 >/dev/null || \
+	addgroup -S munge 2>&1 >/dev/null
+getent passwd munge 2>&1 >/dev/null || \
+	adduser -S -D \
+		-h /run/munge \
+		-s /sbin/nologin \
+		-G munge \
+		-g "MUNGE authentication service" \
+		munge 2>&1 >/dev/null
+
+exit 0

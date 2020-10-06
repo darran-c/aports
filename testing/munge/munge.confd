@@ -1,0 +1,4 @@
+# /etc/conf.d/munge
+
+USER="munge"
+GROUP="munge"
